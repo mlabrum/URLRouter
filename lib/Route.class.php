@@ -13,6 +13,12 @@ class Route{
 	);
 	
 	/**
+	* Contains the default options for the current route including the Path, Controller and Action
+	* @var Map
+	*/
+	protected $defaultOptions;
+	
+	/**
 	* Contains the options for the current route including the Path, Controller and Action
 	* @var Map
 	*/
@@ -23,8 +29,9 @@ class Route{
 	* @return Route
 	*/
 	public function __construct($options=Array(), $validators=Array()){
-		$this->options = Array_merge($this->options, $options);
-		$this->validators = $validators;
+		$this->options 		= Array_merge($this->options, $options);
+		$this->defaultOptions 	= $this->options;
+		$this->validators 		= $validators;
 	}
 	
 	/**
@@ -53,6 +60,20 @@ class Route{
 		$this->options['Controller'] = $controller;
 		return $this;
 	}
+	
+	/**
+	* returns an option parameter/url parameter
+	* @param String $param
+	* @return String
+	*/
+	public function getParam($param){
+		if(isset($this->options[$param])){
+			return $this->options[$param];
+		}else{
+			return false;
+		}
+	}
+	
 	
 	/**
 	* Tests if the passed $str is a url variable
@@ -141,8 +162,7 @@ class Route{
 
 	/**
 	* Includes the controller file and then calls the  action associated with the route
-	* @param String $uri
-	* @return Boolean
+	* @throws NoRouteException, UnknownClassException, FileDoesntExistException
 	*/
 	public function call(){
 		$className 	= ucfirst($this->options['Controller']) . "Controller";
@@ -155,9 +175,9 @@ class Route{
 				$class = new $className();
 		
 				if(method_exists($class, "__call") || method_exists($class, $actionName)){
-					$route->ret = call_user_func(Array($class, $actionName), Router::getInstance());
+					call_user_func(Array($class, $actionName), Router::getInstance());
 				}else if(method_exists($class, "NoRouteAction")){
-					$route->ret = call_user_func(Array($class, "NoRouteAction"), Router::getInstance());   
+					call_user_func(Array($class, "NoRouteAction"), Router::getInstance());   
 				}else{
 					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class $className");
 				}
@@ -168,7 +188,52 @@ class Route{
 			throw new FileDoesntExistException("File $file doesn't exist");
 		}
 	}
+	
+	
+	/**
+	* Creates a url by using the route and the passed params
+	* @param Map $params
+	* @param Boolean $useDefaultRouteVars
+	* @return String
+	*/
+	public function create($params, $useDefaultRouteVars = false){
+		$uri = Router::getInstance()->baseURL();
+		if(empty($this->options["Path"])){
+			return $uri;
+		}else{
+			$options = $this->options;
+		    
+			if($useDefaultRouteVars){
+				$options = $this->defaultOptions;
+			}
 
+			$route = $this->getParam("Path");
+			if(preg_match_all("/:([^\/]*)/", $route, $matches)){
+				foreach($matches[1] as $match){
+					if(isset($options[$match])){
+						$item	= $options[$match];
+						$route	= $this->str_replace_once(":" . $match, $item, $route);
+					}
+				}
+			}
+			return 'http' . (empty($_SERVER['HTTPS']) ? "" : "s") . '://' . $_SERVER['HTTP_HOST'] . $uri . trim($route, "/");
+		}
+	}
+
+	/**
+	* Searches the $subject for $find then replaces it with $replace
+	* @param String $find
+	* @param String $replace
+	* @param String $subject
+	* @return String
+	*/
+	private function str_replace_once($find, $replace, $subject){
+		if($pos = strpos($subject, $find)){
+			return substr($subject, 0, $pos) . $replace . substr($subject, $pos + strlen($find));
+		}else{
+			return $subject;
+		}
+	}
 
 }
 
