@@ -28,14 +28,28 @@ class Router{
 	
 	/**
 	* Adds the passed map of routes into the router
-	* @param map $routes
+	* @throws MultipleInstancesException
 	* @return URLRouter
 	*/
 	public function __construct(){
 		if(self::$instance){
-			throw new URLRouterMultipleInstancesException();
+			throw new MultipleInstancesException();
 		}
 		self::$instance = &$this;
+	}
+	
+	
+	/**
+	* Returns the current instance of the URLRouter, creating one if one doesn't exist
+	* @return URLRouter
+	*/
+	public function getInstance(){
+		if(self::$instance){
+			return self::$instance;
+		}else{
+			self::$instance = new self();
+			return self::$instance;
+		}
 	}
 	
 	/**
@@ -54,10 +68,34 @@ class Router{
 		$this->routes += $routes;
 	}
 	
+	/**
+	* Gets the base url without the filename
+	* @return string
+	*/
+	public function baseURL(){
+		$url = str_replace(strrchr($_SERVER['SCRIPT_NAME'], "/"), '', $_SERVER['SCRIPT_NAME']);
+		return $url == "/" ? "/" : $url . '/';
+	}
+	
+	/**
+	* Gets the base uri without the base and without the querystring
+	* @return string
+	*/
+	protected function getRequestUri(){
+		$url 		= $_SERVER['REQUEST_URI'];
+		$parseout 	= $this->baseURL();
+		
+		if($parseout != "/"){
+			$url = preg_replace("/^" . preg_quote($parseout, "/") . "/", "", $url);
+		}
+		
+		return preg_replace("/\?". preg_quote($_SERVER['QUERY_STRING'])."$/", "", $url);
+	}
+    
+	
 
 }
 
-class URLRouterMultipleInstancesException extends exception{}
-
+class MultipleInstancesException extends \Exception{}
 
 ?>
