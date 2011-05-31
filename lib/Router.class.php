@@ -24,7 +24,7 @@ class Router{
 	* Stores the current route
 	* @var Route
 	*/	
-	private $route;
+	public $route;
 	
 	/**
 	* Stores the instance of the router for the singleton design pattern
@@ -46,7 +46,7 @@ class Router{
 	
 	/**
 	* Returns the current instance of the URLRouter, creating one if one doesn't exist
-	* @return URLRouter
+	* @return Router
 	*/
 	public function getInstance(){
 		if(self::$instance){
@@ -60,17 +60,29 @@ class Router{
 	/**
 	* Sets the directory that the controller files are located
 	* @param string $directory
+	* @return Router
 	*/
 	public function setControllerDirectory($directory){
 		$this->controllerDirectory = $directory;
+		return $this;
+	}
+	
+	/**
+	* Gets the directory that the controller files are located
+	* @return String
+	*/
+	public function getControllerDirectory(){
+		return $this->controllerDirectory;
 	}
 	
 	/**
 	* Adds the passed map of routes into the router
 	* @param map $routes
+	* @return Router
 	*/
 	public function addRoutes($routes){
 		$this->routes += $routes;
+		return $this;
 	}
 	
 	/**
@@ -126,7 +138,7 @@ class Router{
 	* @throws NoRouteException
 	*/
 	public function dispatch(){
-		if($this->route instanceof RouterRoute){
+		if($this->route instanceof Route){
 			$this->route->call();
 		}else{
 			throw new NoRouteException;

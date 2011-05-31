@@ -175,9 +175,9 @@ class Route{
 				$class = new $className();
 		
 				if(method_exists($class, "__call") || method_exists($class, $actionName)){
-					call_user_func(Array($class, $actionName), Router::getInstance());
+					call_user_func(Array($class, $actionName), Router::getInstance(), $this);
 				}else if(method_exists($class, "NoRouteAction")){
-					call_user_func(Array($class, "NoRouteAction"), Router::getInstance());   
+					call_user_func(Array($class, "NoRouteAction"), Router::getInstance(), $this);   
 				}else{
 					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class $className");
 				}
@@ -237,8 +237,6 @@ class Route{
 
 }
 
-
-class NoRouteException extends \Exception{}
 class UnknownClassException extends \Exception{}
 class FileDoesntExistException extends \Exception{}
 

@@ -3,12 +3,13 @@
  for example /test/ => TestController::test()
  
  
+ 
  ADDING A DEFAULT ROUTE:
  
 	The default route is named index
 
 	$routes = Array(
-	    "index" => new RouterRoute()
+	    "index" => new URLRouter\Route()
 	)
 	 
 	 
@@ -20,7 +21,7 @@
 	to add routes to the URLRouter you pass a Hash to the the URLRouter::addRoutes function, see the section "INITIALIZING THE ROUTER" to see how to correctly to that
 	
 	$routes = Array(
-		"index" => new RouterRoute()
+		"index" => new URLRouter\Route()
 	
 	)
  
@@ -65,16 +66,16 @@
 		
 		so for example, our above routes would look like this in a $routes array
 		$routes = Array(
-			"index" => 	new RouterRoute(),
-			"Jobs" => 	new RouterRoute("Jobs/:action")
+			"index" => 	new URLRouter\Route(),
+			"Jobs" => 	new URLRouter\Route("Jobs/:action")
 		);
 		
 		By using the :action variable inside the Jobs route, the class will automaticly call the correct JobsController::*Action() function, if :action is empty, then it defaults to Index
 		
 		We can also set the default values of the variables
 		$routes = Array(
-			"index" => 	new RouterRoute(),
-			"Jobs" => 	new RouterRoute("Jobs/:action/:blah", "Controller" => "Jobs", "Action" => "index", "blah" => "test")
+			"index" => 	new URLRouter\Route(),
+			"Jobs" => 	new URLRouter\Route("Jobs/:action/:blah", "Controller" => "Jobs", "Action" => "index", "blah" => "test")
 		);
 		
 		Note: you may notice we set the controller for the Jobs route, this is because the Controller defaults to Index, so if we want to use a different one, we must specify it
@@ -109,8 +110,8 @@
 		Example of a regular expression matching only numbers in the :blah variable:
 		
 		$routes = Array(
-			"index" => 	new RouterRoute(),
-			"Jobs" => 	new RouterRoute("Jobs/:action/:blah", "Controller" => "Jobs", "Action" => "index", "blah" => 0, Array("blah" => "/^[0-9]+$/"))
+			"index" => 	new URLRouter\Route(),
+			"Jobs" => 	new URLRouter\Route("Jobs/:action/:blah", "Controller" => "Jobs", "Action" => "index", "blah" => 0, Array("blah" => "/^[0-9]+$/"))
 		);
 		
 	ConditionalRouterRoute
@@ -136,11 +137,11 @@
  
  INITIALIZING THE ROUTER:
  
-	 $router = new URLRouter();
+	 $router = new URLRouter\Router();
 	 $router->setControllerDirectory('./controllers/') //directory where your classes are
 		  ->addRoutes($routes)
-		  ->dispatch() //parses the url and finds the correct route
-		  ->call(); //calls that route
+		  ->match() //parses the url and finds the correct route
+		  ->dispatch(); //calls that route
  
  
  
@@ -172,8 +173,8 @@
  To add more special routes
  
 $routes = Array(
-    "index" => new RouterRoute(),
-    "someother" => new RouterRoute(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
+    "index" => new URLRouter\Route(),
+    "someother" => new URLRouter\Route(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
 )
  
  in the Path you can specify variable placeholders that start with : eg :test, these will be filled in with the value it matches in the url
@@ -184,7 +185,7 @@ $routes = Array(
  
  eg
  
- new RouterRoute(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"), Array("param" => "$"))
+ new URLRouter\Route(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"), Array("param" => "$"))
  
  The special $ mask means, the param continues to the end of the url so test/:param will match test/1/2/3/4 and :param will contain 1/2/3/4
  
@@ -193,7 +194,7 @@ $routes = Array(
  
  eg
  
-new RouterRoute(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"), Array("param" => "xxx"))
+new URLRouter\Route(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"), Array("param" => "xxx"))
  
 //returns true or false if the param is correct
 function xxx($urlpart, $paramName){
