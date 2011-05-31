@@ -21,6 +21,12 @@ class Router{
 	private $routes = Array();
 	
 	/**
+	* Stores the current route
+	* @var Route
+	*/	
+	private $route;
+	
+	/**
 	* Stores the instance of the router for the singleton design pattern
 	* @var object
 	*/
@@ -37,7 +43,6 @@ class Router{
 		}
 		self::$instance = &$this;
 	}
-	
 	
 	/**
 	* Returns the current instance of the URLRouter, creating one if one doesn't exist
@@ -81,7 +86,7 @@ class Router{
 	* Gets the base uri without the base and without the querystring
 	* @return string
 	*/
-	protected function getRequestUri(){
+	public function getRequestUri(){
 		$url 		= $_SERVER['REQUEST_URI'];
 		$parseout 	= $this->baseURL();
 		
@@ -91,11 +96,46 @@ class Router{
 		
 		return preg_replace("/\?". preg_quote($_SERVER['QUERY_STRING'])."$/", "", $url);
 	}
-    
 	
+	/**
+	* Parses the url and selects the best route from {@link $routes}, if no route is found, then it will use the default route of 
+	* if no url matches and the uri is empty then it will call IndexController::IndexAction otherwise it will call IndexController::404Action
+	* @return URLRouter
+	*/
+	public function match(){
+		$uri = $this->getRequestUri();
+
+		foreach($this->routes as $name => $route){
+			if($route->parse($uri)){
+				$this->route = $route;
+				return $this;
+			}
+		}
+	
+		// If none of the routes matched
+		$this->route = new Route(); // Add empty "index" route
+		if(!empty($uri)){
+			$this->route->setAction("NoRoute");
+		}
+		
+		return $this;
+	}
+    
+        /**
+	* Calls the saved route in $route
+	* @throws NoRouteException
+	*/
+	public function dispatch(){
+		if($this->route instanceof RouterRoute){
+			$this->route->run();
+		}else{
+			throw new NoRouteException;
+		}
+	}
 
 }
 
 class MultipleInstancesException extends \Exception{}
+class NoRouteException extends \Exception{}
 
 ?>
