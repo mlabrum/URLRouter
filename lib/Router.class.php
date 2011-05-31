@@ -127,7 +127,7 @@ class Router{
 	*/
 	public function dispatch(){
 		if($this->route instanceof RouterRoute){
-			$this->route->run();
+			$this->route->call();
 		}else{
 			throw new NoRouteException;
 		}
