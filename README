@@ -31,23 +31,23 @@
  TYPES OF ROUTES:
 	Currently the router supports four types of routes (but its simple to create your own)
 	
-	StaticRouterRoute
+	URLRouter\StaticRoute
 		This does as its name suggests, maps a route to a static file, this is mainly used to load legency code
 		
 		For example, loading the old homepage for the index
 		$routes = Array(
-			"index" => new StaticRouterRoute("old/home.php")
+			"index" => new URLRouter\StaticRoute("old/home.php")
 		);
 	
 		
 		An example that uses a Path
 		$routes = Array(
-			"old" =>  new StaticRouterRoute("old/homepage.php", Array("Path" => "old"))
+			"old" =>  new URLRouter\StaticRoute("old/homepage.php", Array("Path" => "old"))
 		);
 		
 		A more complex example, since Static also supports dynamic paths
 		$routes = Array(
-			"old" =>  new StaticRouterRoute("old/:page:.php", Array("Path" => "old/:page", "page" => "homepage"))
+			"old" =>  new URLRouter\StaticRoute("old/:page:.php", Array("Path" => "old/:page", "page" => "homepage"))
 		);
 		
 		Note the :page: replacement used in the first parameter, you can use any variable defined in the Path
@@ -94,9 +94,9 @@
 		}
 		
 		Now, how about if you want to validate the url variables?
-		for example, only allowing blah to contain numbers, for this we use the third parameter of the RouterRoute class, which is the "masks" of the variables
+		for example, only allowing blah to contain numbers, for this we use the third parameter of the RouterRoute class, which is the "validators" of the variables
 		
-		Types of masks
+		Types of validators
 			Regular Expressions: 
 				Simply define the mask as "/regexp/" and it will compare the variable against that regular expression
 			
@@ -114,12 +114,12 @@
 			"Jobs" => 	new URLRouter\Route("Jobs/:action/:blah", "Controller" => "Jobs", "Action" => "index", "blah" => 0, Array("blah" => "/^[0-9]+$/"))
 		);
 		
-	ConditionalRouterRoute
+	URLRouter\ConditionalRoute
 		This route is exactly the same as RouterRoute except it allows you to define a callback which returns a boolean, if true it continues like RouterRoute, if false, it does nothing
 		
 		For example to test if the user is logged in
 		
-		    new ConditionalRouterRoute("loggedIn", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
+		    new URLRouter\ConditionalRoute("loggedIn", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
 
 		function loggedIn($router, $route){
 		    if(User::userIsLoggedIn){
@@ -130,10 +130,6 @@
 		    $router->redirect($router->routes["login"]->redirect(Array("return_to" => $route->url)))
 		    return false
 		}
-	
-	JSONRouterRoute
-		This route is exactly the same as RouterRoute except the return value from the Route is encoded in JSON and returned
-	
  
  INITIALIZING THE ROUTER:
  
@@ -181,7 +177,7 @@ $routes = Array(
  if no value matches, then it will attempt to use one defined in the options array
  
  
- You can also add masks which can perform special things on the variables
+ You can also add validators which can perform special things on the variables
  
  eg
  
@@ -210,17 +206,17 @@ function xxx($urlpart, $paramName){
  
 There are more Routing classes you can use to do things based upon urls
 
-StaticRouterRoute which lets you load files, rather than calling functions
-    new StaticRouterRoute("test.php", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
+URLRouter\StaticRoute which lets you load files, rather than calling functions
+    new URLRouter\StaticRoute("test.php", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
     
     will call test.php if the url matches
     
 
-ConditionalRouterRoute lets you pass a callback and if the callback returns true, it does the same as RouterRoute, else it does nothing
+URLRouter\ConditionalRoute lets you pass a callback and if the callback returns true, it does the same as RouterRoute, else it does nothing
 
 for example to test if someone is logged in before serving a url
 
-    new ConditionalRouterRoute("loggedIn", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
+    new URLRouter\ConditionalRoute("loggedIn", Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
 
 function loggedIn($URLRouter, $route){
     if(userIsLoggedIn){
@@ -230,9 +226,7 @@ function loggedIn($URLRouter, $route){
     }
     return false;
 }
- 
- 
- JSONRouterRoute outputs what the Action function returns as JSON
+
  
  
  
