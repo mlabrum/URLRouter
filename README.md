@@ -24,7 +24,7 @@ To add routes to the URLRouter you pass a Hash to the the URLRouter::addRoutes f
 		)
  
 -------------
-#### TYPES OF ROUTES:
+### TYPES OF ROUTES:
 Currently the router supports three types of routes (but its simple to create your own)
 	
 #### URLRouter\StaticRoute
