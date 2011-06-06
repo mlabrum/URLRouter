@@ -6,7 +6,7 @@ for example the URL  http://example.com/test/ could be automaticly routed to => 
  
 -----------------------
  
-### ADDING A DEFAULT ROUTE:
+### Adding A Default Route:
 
 The default route is named index
 
@@ -16,7 +16,7 @@ The default route is named index
 
 This will call IndexController::IndexAction() when the user requests /
  
-### ADDING ROUTES:
+### Adding Routes:
 To add routes to the URLRouter you pass a Hash to the the URLRouter::addRoutes function, see the section "INITIALIZING THE ROUTER" to see how to correctly to that
 	
 		$routes = Array(
@@ -24,7 +24,7 @@ To add routes to the URLRouter you pass a Hash to the the URLRouter::addRoutes f
 		)
  
 -------------
-### TYPES OF ROUTES:
+### Types Of Routes:
 Currently the router supports three types of routes (but its simple to create your own)
 	
 #### URLRouter\StaticRoute
@@ -137,7 +137,7 @@ For example to test if the user is logged in
 
 --------------------
 
-### INITIALIZING THE ROUTER:
+### Initalizing The Router:
  
 	 $router = new URLRouter\Router();
 	 $router->setControllerDirectory('./controllers/') //directory where your classes are
