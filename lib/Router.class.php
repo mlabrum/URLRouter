@@ -106,7 +106,7 @@ class Router{
 			$url = preg_replace("/^" . preg_quote($parseout, "/") . "/", "", $url);
 		}
 		
-		return preg_replace("/\?". preg_quote($_SERVER['QUERY_STRING'])."$/", "", $url);
+		return preg_replace("/\?.*$/", "", $url);
 	}
 	
 	/**

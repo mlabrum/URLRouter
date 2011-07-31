@@ -131,7 +131,7 @@ For example to test if the user is logged in
 		    }
 		    
 		    //redirect takes a array of default replacement variables
-		    $router->redirect($router->routes["login"]->redirect(Array("return_to" => $route->url)))
+		    $router->redirect($router->routes["login"]->create(Array("return_to" => $route->url)))
 		    return false
 		}
 
