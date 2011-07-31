@@ -158,8 +158,8 @@ For example to test if the user is logged in
 						echo "index";
 				}
     
-				public function SomeotherAction($URLRouter){
-					echo $URLRouter->getParam("param");
+				public function SomeotherAction($URLRouter, $route){
+					echo $route->getParam("param");
     				}
     
    				//NoRoute is a special function called when the router cannot find a route
@@ -173,7 +173,7 @@ For example to test if the user is logged in
  
 		$routes = Array(
 				"index" => new URLRouter\Route(),
-				"someother" => new URLRouter\Route(Array("Path" => "test/:param", "Action" => "xxx", "param" => "rawr"))
+				"someother" => new URLRouter\Route(Array("Path" => "test/:param", "Action" => "Someother", "param" => "rawr"))
 		)
  
 In the Path you can specify variable placeholders that start with : eg :test, these will be filled in with the value it matches in the url

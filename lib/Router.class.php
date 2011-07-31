@@ -104,6 +104,7 @@ class Router{
 		
 		if($parseout != "/"){
 			$url = preg_replace("/^" . preg_quote($parseout, "/") . "/", "", $url);
+			$url = trim($url, "/");
 		}
 		
 		return preg_replace("/\?.*$/", "", $url);
