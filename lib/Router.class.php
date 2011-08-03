@@ -18,13 +18,19 @@ class Router{
 	* Stores the array of route objects
 	* @var Array
 	*/	
-	private $routes = Array();
+	public $routes = Array();
 	
 	/**
 	* Stores the current route
 	* @var Route
 	*/	
 	public $route;
+	
+	/**
+	 * Stores the current routes name
+	 * @var String
+	 */
+	public $route_name = false;
 	
 	/**
 	* Stores the instance of the router for the singleton design pattern
@@ -48,13 +54,18 @@ class Router{
 	* Returns the current instance of the URLRouter, creating one if one doesn't exist
 	* @return Router
 	*/
-	public function getInstance(){
+	public static function getInstance(){
 		if(self::$instance){
 			return self::$instance;
 		}else{
 			self::$instance = new self();
 			return self::$instance;
 		}
+	}
+	
+	public static function redirect($url){
+		header("location: " . str_replace("./", self::fullBaseURL(), $url));
+		exit;
 	}
 	
 	/**
@@ -86,6 +97,14 @@ class Router{
 	}
 	
 	/**
+	 * Returns the full base url with server details
+	 * @return string
+	 */
+	public static function fullBaseURL(){
+		return 'http' .(empty($_SERVER['HTTPS']) ? "" : "s") . '://'. $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), "\\") . '/';
+	}
+	
+	/**
 	* Gets the base url without the filename
 	* @return string
 	*/
@@ -104,10 +123,11 @@ class Router{
 		
 		if($parseout != "/"){
 			$url = preg_replace("/^" . preg_quote($parseout, "/") . "/", "", $url);
-			$url = trim($url, "/");
 		}
+		$url = trim($url, "/");
+		$url = preg_replace("/\?.*$/", "", $url);
 		
-		return preg_replace("/\?.*$/", "", $url);
+		return empty($url) ? "/" : $url;
 	}
 	
 	/**
@@ -120,7 +140,8 @@ class Router{
 
 		foreach($this->routes as $name => $route){
 			if($route->parse($uri)){
-				$this->route = $route;
+				$this->route		= $route;
+				$this->route_name	= $name;
 				return $this;
 			}
 		}

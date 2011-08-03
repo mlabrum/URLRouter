@@ -101,6 +101,7 @@ class Route{
 	* @return Boolean
 	*/
 	public function parse($uri){
+		
 		if($uri == $this->options["Path"]){
 			return true;
 		}elseif(empty($uri)){
@@ -109,16 +110,32 @@ class Route{
 			$params	= $this->options;
 			$parts	= explode("/", $params["Path"]); // Create an array of path parts
 			$urlparts 	= empty($uri) ? Array() :  explode("/", $uri); // Create an array of url parts
-		    
-		    
+			
 			// Check if the validators doesnt have a $ (meaning match everything after) and if url parts are greater than the path parts
 			if((array_search("$", $this->validators) === false) && (count($urlparts) > count($parts))){
 					return false;
 			}
+			
+			
 		    
 			for($i=0;$i<count($parts);$i++){
 				$part = $parts[$i];
-			
+				
+				// parse optional tags ()
+				if(strpos($part, "(") !== false){
+					
+					/* test if the string is the same */
+					$r = str_replace(")", ")?", $part);
+					if(preg_match("/" . str_replace(Array("\\(", "\\)", "\\?"), Array("(", ")", "?"), preg_quote($r)) ."/", $urlparts[$i])){
+						// it matches so add it in
+						
+						$part = $urlparts[$i];
+					}else{
+						return false; // not the same
+					}
+				}
+				
+				
 				if($this->isUrlvar($part)){
 					$spart = $this->stripUrlVar($part);
 					if(isset($urlparts[$i])){
@@ -198,6 +215,19 @@ class Route{
 	*/
 	public function create($params, $useDefaultRouteVars = false){
 		$uri = Router::getInstance()->baseURL();
+		
+		$extra = "";
+		
+		if(isset($params['_GET'])){
+			$extra = "?";
+			$query_strings = Array();
+			foreach($params['_GET'] as $name => $value){
+				$query_strings[] = sprintf("%s=%s", $name, $value);
+			}
+			$extra .= implode("&", $query_strings);
+			unset($params['_GET']);
+		}
+		
 		if(empty($this->options["Path"])){
 			return $uri;
 		}else{
@@ -208,6 +238,10 @@ class Route{
 			}
 
 			$route = $this->getParam("Path");
+			
+			// Remove optional bits
+			$route = preg_replace("/\(.*?\)/", "", $route);
+			
 			if(preg_match_all("/:([^\/]*)/", $route, $matches)){
 				foreach($matches[1] as $match){
 					if(isset($options[$match])){
@@ -216,7 +250,7 @@ class Route{
 					}
 				}
 			}
-			return 'http' . (empty($_SERVER['HTTPS']) ? "" : "s") . '://' . $_SERVER['HTTP_HOST'] . $uri . trim($route, "/");
+			return 'http' . (empty($_SERVER['HTTPS']) ? "" : "s") . '://' . $_SERVER['HTTP_HOST'] . $uri . trim($route, "/") . $extra;
 		}
 	}
 
