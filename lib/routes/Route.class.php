@@ -7,9 +7,9 @@ class Route{
 	* @var Map
 	*/
 	protected $options = Array(
-		"Path" => "",
-		"Controller" => "Index",
-		"Action" => "Index"
+		"Path" 			=> "",
+		"Controller"	=> "Index",
+		"Action" 		=> "Index"
 	);
 	
 	/**
@@ -29,9 +29,16 @@ class Route{
 	* @return Route
 	*/
 	public function __construct($options=Array(), $validators=Array()){
-		$this->options 		= Array_merge($this->options, $options);
+		$this->options 			= Array_merge($this->options, $options);
 		$this->defaultOptions 	= $this->options;
 		$this->validators 		= $validators;
+	}
+	
+	/**
+	 * Creates an instance of the Route class, helpful for chaining by URLRouter\Route::create()->method(), because new URLRouter\Route()->method() isn't valid
+	 */
+	public static function create(){
+		return new self();
 	}
 	
 	/**
@@ -62,6 +69,15 @@ class Route{
 	}
 	
 	/**
+	 * Sets a option parameter/url parameter
+	 * @param String $param
+	 * @param String $value
+	 */
+	public function setParam($param, $value){
+		$this->options[$param] = $value;
+	}
+	
+	/**
 	* returns an option parameter/url parameter
 	* @param String $param
 	* @return String
@@ -73,7 +89,6 @@ class Route{
 			return false;
 		}
 	}
-	
 	
 	/**
 	* Tests if the passed $str is a url variable
@@ -92,8 +107,6 @@ class Route{
 	protected function stripUrlVar($var){
 		return trim($var, ":");
 	}
-	
-	
 	
 	/**
 	* Parses the passed uri against the route returning true if it matches
@@ -246,7 +259,7 @@ class Route{
 				foreach($matches[1] as $match){
 					if(isset($options[$match])){
 						$item	= $options[$match];
-						$route	= $this->str_replace_once(":" . $match, $item, $route);
+						$route	= $this->str_replace_once(":" . $match, strtolower($item), $route);
 					}
 				}
 			}
