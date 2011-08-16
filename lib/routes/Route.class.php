@@ -37,7 +37,7 @@ class Route{
 	/**
 	 * Creates an instance of the Route class, helpful for chaining by URLRouter\Route::create()->method(), because new URLRouter\Route()->method() isn't valid
 	 */
-	public static function create(){
+	public static function initialize(){
 		return new self();
 	}
 	
