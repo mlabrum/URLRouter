@@ -6,7 +6,7 @@
  * @link url
  */
 namespace URLRouter;
-class ConditionalRouterRoute extends Route{
+class ConditionalRoute extends Route{
 	/**
 	* Contains the callback to call to check if we should run this route
 	* @var Function
@@ -17,8 +17,8 @@ class ConditionalRouterRoute extends Route{
 	* Initializes the route with the passed options and validators
 	* @return Route
 	*/
-	public function __construct($callback, $params, $validators){
-		$this->file = $callback;
+	public function __construct($callback, $params, $validators=Array()){
+		$this->callback = $callback;
 		parent::__construct($params, $validators);
 	}
 
@@ -28,8 +28,8 @@ class ConditionalRouterRoute extends Route{
 	*/
 	public function call(){
 		if(is_callable($this->callback)){
-			if(call_user_func($this->callback, URLRouter::getInstance(), $this)){
-				parent::run();
+			if(call_user_func($this->callback, Router::getInstance(), $this)){
+				parent::call();
 			}
 		}else{
 			throw new UnknownClassException("Unable to call callback");
