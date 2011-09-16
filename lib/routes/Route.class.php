@@ -204,9 +204,13 @@ class Route{
 			if(class_exists($className)){
 				$class = new $className();
 		
-				if(method_exists($class, "__call") || method_exists($class, $actionName)){
+				if((method_exists($class, "__call") || method_exists($class, $actionName)) && $actionName != "NoRouteAction"){
 					call_user_func(Array($class, $actionName), Router::getInstance(), $this);
 				}else if(method_exists($class, "NoRouteAction")){
+					
+					header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+					header("Status: 404 Not Found");
+					
 					call_user_func(Array($class, "NoRouteAction"), Router::getInstance(), $this);   
 				}else{
 					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class $className");
