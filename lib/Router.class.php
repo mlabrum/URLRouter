@@ -146,6 +146,15 @@ class Router{
 			}
 		}
 	
+		// Default index and none of the routes picked it up
+		if($uri == "/"){
+			if(isset($this->routes['index'])){
+				$this->route		= $this->routes['index'];
+				$this->route_name	= "index";
+				return $this;
+			}
+		}
+		
 		// If none of the routes matched
 		$this->route = new Route(); // Add empty "index" route
 		if(!empty($uri)){
