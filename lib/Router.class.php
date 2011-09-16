@@ -164,7 +164,17 @@ class Router{
 		return $this;
 	}
     
-        /**
+	/**
+	 * Returns if the current request is an XMLHTTPRequest
+	 */
+	public function isXMLHTTPRequest(){
+		if(isset($_SERVER['X-Requested-With']) && $_SERVER['X-Requested-With'] == 'XMLHttpRequest'){
+			return true;
+		}
+		return false;
+	}
+	
+    /**
 	* Calls the saved route in $route
 	* @throws NoRouteException
 	*/
