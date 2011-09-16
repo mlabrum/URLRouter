@@ -248,14 +248,14 @@ class Route{
 		if(empty($this->options["Path"])){
 			return $uri;
 		}else{
-			$options = $this->options;
+			$options = array_merge($this->options, $params);
 		    
 			if($useDefaultRouteVars){
 				$options = $this->defaultOptions;
 			}
 
 			$route = $this->getParam("Path");
-			
+
 			// Remove optional bits
 			$route = preg_replace("/\(.*?\)/", "", $route);
 			
