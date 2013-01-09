@@ -5,7 +5,7 @@
  * @license Beerware
  * @link url
  */
-namespace URLRouter;
+namespace URLRouter\Route;
 class StaticRoute extends Route{
 
 	/**

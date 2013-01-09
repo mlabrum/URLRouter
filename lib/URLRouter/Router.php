@@ -216,7 +216,7 @@ class Router{
 		}
 		
 		// If none of the routes matched
-		$this->route = new Route(); // Add empty "index" route
+		$this->route = new Route\Route(); // Add empty "index" route
 		if(!empty($uri)){
 			$this->route->setAction("NoRoute");
 		}
@@ -246,7 +246,7 @@ class Router{
 	* @throws NoRouteException
 	*/
 	public function dispatch(){
-		if($this->route instanceof Route){
+		if($this->route instanceof Route\Route){
 			return $this->route->call();
 		}else{
 			throw new NoRouteException;

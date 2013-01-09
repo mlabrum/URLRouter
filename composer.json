@@ -1,0 +1,17 @@
+{
+    "name": "mlabrum/url-router",
+    "description": "Provides a simple pluggable url router implementation",
+    "authors": [
+        {
+            "name": "Matt Labrum",
+            "email": "matt@labrum.me"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+
+    },
+     "autoload": {
+        "psr-0": {"URLRouter": "lib/"}
+    }
+}

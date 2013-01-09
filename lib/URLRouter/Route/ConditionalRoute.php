@@ -5,7 +5,7 @@
  * @license Beerware
  * @link url
  */
-namespace URLRouter;
+namespace URLRouter\Route;
 class ConditionalRoute extends Route{
 	/**
 	* Contains the callback to call to check if we should run this route

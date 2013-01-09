@@ -1,5 +1,8 @@
 <?php
-namespace URLRouter;
+namespace URLRouter\Route;
+
+use URLRouter\Router;
+
 class Route{
 
 	/**
