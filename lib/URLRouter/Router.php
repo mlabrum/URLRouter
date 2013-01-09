@@ -39,6 +39,12 @@ class Router{
 	static $instance; 
 	
 	/**
+	 * Wraps a Controller in this class before being called
+	 * @var String
+	 */
+	public $controller_wrapper_class	= false;
+	
+	/**
 	 * An instance of the symfony EventDispatcher
 	 */
 	public $event_dispatcher		= false;
@@ -55,6 +61,16 @@ class Router{
 			throw new MultipleInstancesException();
 		}
 		self::$instance = &$this;
+	}
+	
+	public function wrap($obj){
+		if(is_string($obj)){
+			$obj = new $obj;
+		}
+		if($this->controller_wrapper_class){
+			return new $this->controller_wrapper_class($obj);
+		}
+		return $obj;
 	}
 	
 	/**
