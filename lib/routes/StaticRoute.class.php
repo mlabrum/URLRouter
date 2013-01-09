@@ -30,12 +30,21 @@ class StaticRoute extends Route{
 		$this->file = $file;
 		parent::__construct($params, $validators);
 	}
+	
+	/**
+	 * Add support for Ajax controller initialization
+	 * (non-PHPdoc)
+	 * @see URLRouter.Route::getControllerInstance()
+	 */
+	public function getControllerInstance(){
+		return Array($this, 'run');
+	}
 
 	/**
 	* Loads the file specified when creating the route
 	* @return Route
 	*/
-	public function call(){
+	public function run($options=false){
 		if(file_exists($this->file)){
 			require($this->file);
 		}else{

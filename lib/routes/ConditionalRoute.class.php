@@ -26,10 +26,10 @@ class ConditionalRoute extends Route{
 	* Runs the callback function, checking if it returns true, if so it runs the route
 	* @throws UnknownClassException
 	*/
-	public function call(){
+	public function call($options=false){
 		if(is_callable($this->callback)){
 			if(call_user_func($this->callback, Router::getInstance(), $this)){
-				parent::call();
+				parent::call($options);
 			}
 		}else{
 			throw new UnknownClassException("Unable to call callback");

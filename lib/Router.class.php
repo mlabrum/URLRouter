@@ -39,6 +39,13 @@ class Router{
 	static $instance; 
 	
 	/**
+	 * An instance of the symfony EventDispatcher
+	 */
+	public $event_dispatcher		= false;
+	
+	const RESOLVE_CONTROLLER		= 'URLRouter.ResolveController';
+	
+	/**
 	* Adds the passed map of routes into the router
 	* @throws MultipleInstancesException
 	* @return URLRouter
@@ -65,6 +72,7 @@ class Router{
 	
 	public static function redirect($url){
 		header("location: " . str_replace("./", self::fullBaseURL(), $url));
+		@session_write_close();
 		exit;
 	}
 	
@@ -85,6 +93,23 @@ class Router{
 	public function getControllerDirectory(){
 		return $this->controllerDirectory;
 	}
+	
+	/**
+	 * Returns the file path for the controller
+	 * @param String $name
+	 */
+	public function getControllerFile($name){
+		return $this->getControllerDirectory() . $name . ".php";
+	}
+	
+	/**
+	 * Returns the controllers class name
+	 * @param string $name
+	 */
+	public function getControllerClassName($name){
+		return ucfirst($name) . "Controller";
+	}
+	
 	
 	/**
 	* Adds the passed map of routes into the router
@@ -109,7 +134,9 @@ class Router{
 	* @return string
 	*/
 	public function baseURL(){
-		$url = str_replace(strrchr($_SERVER['SCRIPT_NAME'], "/"), '', $_SERVER['SCRIPT_NAME']);
+		//$url = str_replace(strrchr($_SERVER['SCRIPT_NAME'], "/"), '', $_SERVER['SCRIPT_NAME']);
+		$url = str_replace("index.php", "", $_SERVER['SCRIPT_NAME']);
+		
 		return $url == "/" ? "/" : $url . '/';
 	}
 	
@@ -130,6 +157,39 @@ class Router{
 		return empty($url) ? "/" : $url;
 	}
 	
+	public $is_sub_request = false;
+	
+	public function subrequest($url, $options=Array()){
+		$old_request			= $_SERVER['REQUEST_URI'];
+		$_SERVER['REQUEST_URI'] = $url;
+		
+		// Save the current post
+		if(isset($options['POST'])){
+			$old_post	= $_POST;
+			$_POST		= $options['POST'];	
+		}
+		
+		$this->is_sub_request = true;
+		
+		// Clone the current URLRouter
+		$router = clone self::getInstance();
+		
+		$router->match();
+		$ret = $router->dispatch();
+		
+		$this->is_sub_request = false;
+		
+		// Restore post
+		if(isset($options['POST'])){
+			$_POST = $old_post;
+		}
+		
+		// Restore the old request URI
+		$_SERVER['REQUEST_URI'] = $old_request;
+		return $ret;
+	}
+	
+	
 	/**
 	* Parses the url and selects the best route from {@link $routes}, if no route is found, then it will use the default route of 
 	* if no url matches and the uri is empty then it will call IndexController::IndexAction otherwise it will call IndexController::404Action
@@ -137,7 +197,7 @@ class Router{
 	*/
 	public function match(){
 		$uri = $this->getRequestUri();
-
+		
 		foreach($this->routes as $name => $route){
 			if($route->parse($uri)){
 				$this->route		= $route;
@@ -167,11 +227,18 @@ class Router{
 	/**
 	 * Returns if the current request is an XMLHTTPRequest
 	 */
-	public function isXMLHTTPRequest(){
-		if(isset($_SERVER['X-Requested-With']) && $_SERVER['X-Requested-With'] == 'XMLHttpRequest'){
+	public static function isXMLHTTPRequest(){
+		if(isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest'){
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Send a http 500 code back
+	 */
+	public static function sendHttpInternalServerError(){
+		header($_SERVER["SERVER_PROTOCOL"] . " 500 Internal Server Error");
 	}
 	
     /**
@@ -180,10 +247,61 @@ class Router{
 	*/
 	public function dispatch(){
 		if($this->route instanceof Route){
-			$this->route->call();
+			return $this->route->call();
 		}else{
 			throw new NoRouteException;
 		}
+	}
+	
+	/**
+	 * returns the route by the name, $name
+	 */
+	public static function route($name){
+		return self::getInstance()->routes[$name];
+	}
+	
+	/**
+	 * Registers the router allowing the creation of {route} tags
+	 */
+	public function register_smarty($smarty){
+		$smarty->registerPlugin("function", "route", Array(&$this , "smarty_plugin_route_tag"), true);
+	}
+	
+	/**
+	 * Handles the smarty {route} tag
+	 * @param Array $args
+	 * @param Smarty $smarty
+	 */
+	public function smarty_plugin_route_tag($args, $smarty){
+		// php/smarty bug where $this = $smarty :/
+		$router = Router::getInstance();
+		$options = array_merge(Array(
+			"get"		=> Array(),
+			"keep_get"	=> false,
+		), $args);
+		
+		if($options['keep_get']){
+			$options['get'] = array_merge($_GET, $options['get']);
+		}
+
+		if(!isset($options['route']) || $options['name'] == "route"){
+			$route = $router->route;
+		}else{
+			if(isset($router->routes[$options['route']])){
+				$route = $router->routes[$options['route']];
+			}else{
+				throw new NoRouteException("no route by that name");
+			}
+		}
+		
+		if(!empty($options['get'])){
+			$options['_GET'] = $options['get'];
+		}
+		
+		unset($options['get']);
+		unset($options['keep_get']);
+		
+		return $route->create($options);
 	}
 
 }

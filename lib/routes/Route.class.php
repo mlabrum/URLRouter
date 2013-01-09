@@ -9,7 +9,8 @@ class Route{
 	protected $options = Array(
 		"Path" 			=> "",
 		"Controller"	=> "Index",
-		"Action" 		=> "Index"
+		"Action" 		=> "Index",
+		"Throw404"		=> false
 	);
 	
 	/**
@@ -37,8 +38,8 @@ class Route{
 	/**
 	 * Creates an instance of the Route class, helpful for chaining by URLRouter\Route::create()->method(), because new URLRouter\Route()->method() isn't valid
 	 */
-	public static function initialize(){
-		return new self();
+	public static function initialize($options=Array(), $validators=Array()){
+		return new self($options, $validators);
 	}
 	
 	/**
@@ -74,7 +75,11 @@ class Route{
 	 * @param String $value
 	 */
 	public function setParam($param, $value){
-		$this->options[$param] = $value;
+		if(is_array($param)){
+			$this->options = array_merge($this->options, $param);
+		}else{
+			$this->options[$param] = $value;
+		}
 	}
 	
 	/**
@@ -114,7 +119,6 @@ class Route{
 	* @return Boolean
 	*/
 	public function parse($uri){
-		
 		if($uri == $this->options["Path"]){
 			return true;
 		}elseif(empty($uri)){
@@ -190,37 +194,82 @@ class Route{
 		return false;
 	}
 
+	private $controllerInstance			 = Array();
+	
+	protected function controllerResolverEvent($toCall){
+		$router	= Router::getInstance();
+		if($router->event_dispatcher){
+			$event	= new \URLRouter\Event\FilterControllerEvent();
+			$event->setController($toCall);
+			$router->event_dispatcher->dispatch(Router::RESOLVE_CONTROLLER, $event);
+			return $event->getController();
+		}
+		
+		return $toCall;
+	}
+	
+	/**
+	 * Creates an Instance of the controller
+	 * @throws FileDoesntExistException, UnknownClassException
+	 */
+	public function getControllerInstance(){
+		$router		= Router::getInstance();
+		
+		$className 	= $router->getControllerClassName($this->options['Controller']);
+		$actionName	= ucfirst($this->options['Action']) . "Action";
+		
+		if(isset($this->options['Namespace'])){
+			$className = $this->options['Namespace'] . '\\' . $className;
+		}
+		
+		return Array(new $className($actionName), $actionName);
+	}
+	
+	
 	/**
 	* Includes the controller file and then calls the  action associated with the route
-	* @throws NoRouteException, UnknownClassException, FileDoesntExistException
+	* @throws NoRouteException
 	*/
-	public function call(){
-		$className 	= ucfirst($this->options['Controller']) . "Controller";
-		$actionName 	= ucfirst($this->options['Action']) . "Action";
-		$file 			= Router::getInstance()->getControllerDirectory() . $className . ".php";
+	public function call($options=false){
+		$router	= Router::getInstance();
 		
-		if(file_exists($file)){
-			include_once($file);
-			if(class_exists($className)){
-				$class = new $className();
+		// Get the controller instance
+		$toCall 			= $this->getControllerInstance();
 		
-				if((method_exists($class, "__call") || method_exists($class, $actionName)) && $actionName != "NoRouteAction"){
-					call_user_func(Array($class, $actionName), Router::getInstance(), $this);
-				}else if(method_exists($class, "NoRouteAction")){
-					
-					header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-					header("Status: 404 Not Found");
-					
-					call_user_func(Array($class, "NoRouteAction"), Router::getInstance(), $this);   
-				}else{
-					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class $className");
-				}
-			}else{
-				throw new UnknownClassException("Class $className doesn't exist in file $file");
-			}
-		}else{
-			throw new FileDoesntExistException("File $file doesn't exist");
+		// Call the event handler to get the modified tocall
+		$toCall				= $this->controllerResolverEvent($toCall);
+
+		// Support passing in custom options
+		if($options){
+			$old_options	= $this->options;
+			$this->options	=  array_merge($this->options, $options);
 		}
+		
+		try{
+			if(is_array($toCall)){
+				list($class, $actionName) = $toCall;
+				
+				if(!method_exists($class, "__call") && !method_exists($class, $actionName)){
+					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class " . get_class($class));
+				}
+			}
+			
+			$ret = call_user_func($toCall, $router, $this);
+			
+			// Restore options
+			if($options){
+				$this->options = $old_options;
+			}
+			
+			return $ret;
+		}catch(\Exception $e){
+			if(method_exists($toCall[0], "CatchException")){
+				call_user_func(Array($toCall[0], "CatchException"), $e, $router, $this);	
+			}else{
+				throw $e;
+			}
+		}
+		
 	}
 	
 	
@@ -230,28 +279,44 @@ class Route{
 	* @param Boolean $useDefaultRouteVars
 	* @return String
 	*/
-	public function create($params, $useDefaultRouteVars = false){
+	public function create($params, $mergeCurrent=true, $useDefaultRouteVars = true){
 		$uri = Router::getInstance()->baseURL();
 		
 		$extra = "";
-		
+
 		if(isset($params['_GET'])){
-			$extra = "?";
+			if(isset($params['_GET']['url_page'])){
+				unset($params['_GET']['url_page']);
+			}		
+			
 			$query_strings = Array();
 			foreach($params['_GET'] as $name => $value){
-				$query_strings[] = sprintf("%s=%s", $name, $value);
+				if(!empty($value)){
+					$query_strings[] = sprintf("%s=%s", $name, $value);
+				}else{
+					if(!isset($params['_NO_EMPTY'])){
+						$query_strings[] = $name;
+					}
+				}
 			}
-			$extra .= implode("&", $query_strings);
+			if(!empty($query_strings)){
+				$extra = "?";
+				$extra .= implode("&", $query_strings);
+			}
 			unset($params['_GET']);
 		}
 		
 		if(empty($this->options["Path"])){
 			return $uri;
-		}else{
-			$options = array_merge($this->options, $params);
-		    
+		}else{		    
 			if($useDefaultRouteVars){
-				$options = $this->defaultOptions;
+				$options = array_merge($this->defaultOptions, $params);
+			}
+
+			if($mergeCurrent){
+				$options = array_merge($this->options, $params);
+			}else{
+				$options = $params;
 			}
 
 			$route = $this->getParam("Path");
@@ -264,10 +329,26 @@ class Route{
 					if(isset($options[$match])){
 						$item	= $options[$match];
 						$route	= $this->str_replace_once(":" . $match, strtolower($item), $route);
+					}else{
+						// Replace it with nothing
+						$route = $this->str_replace_once(":" . $match, "", $route);
 					}
 				}
 			}
-			return 'http' . (empty($_SERVER['HTTPS']) ? "" : "s") . '://' . $_SERVER['HTTP_HOST'] . $uri . trim($route, "/") . $extra;
+
+			$base = "";
+			if(empty($options['only_uri'])){
+				$base = 'http' . (empty($_SERVER['HTTPS']) ? "" : "s") . '://' . $_SERVER['HTTP_HOST'];
+			}else{
+				$uri = "/";
+			}
+
+
+			if(isset($options['#'])){
+				$extra .= "#" . $options['#'];
+			}
+			
+			return $base . $uri . trim($route, "/") . $extra;
 		}
 	}
 
