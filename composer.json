@@ -11,6 +11,9 @@
     "require": {
 
     },
+    "suggest": [
+	{"symfony/event-dispatcher": "Adds support for Router Events"}
+    ],
      "autoload": {
         "psr-0": {"URLRouter": "lib/"}
     }
