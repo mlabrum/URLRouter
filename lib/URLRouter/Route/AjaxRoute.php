@@ -1,6 +1,8 @@
 <?php
 
 namespace URLRouter\Route;
+use URLRouter\Router;
+
 class AjaxRoute extends Route{
 	private $isMultiCall = false;
 	
