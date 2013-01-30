@@ -261,6 +261,7 @@ class Route{
 					$event = new \URLRouter\Event\BeforeActionControllerEvent();
 					$event->setAction($actionName);
 					$class->dispatch(\URLRouter\Router::BEFORE_CALL_ACTION, $event);
+					$actionName = $event->getAction();
 				}
 			}
 			
