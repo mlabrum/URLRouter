@@ -255,6 +255,13 @@ class Route{
 				if(!method_exists($class, "__call") && !method_exists($class, $actionName)){
 					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class " . get_class($class));
 				}
+				
+				// Dispatch a before call action event
+				if($class instanceof \Symfony\Component\EventDispatcher\EventDispatcher){
+					$event = new \URLRouter\Event\BeforeActionControllerEvent();
+					$event->setAction($actionName);
+					$class->dispatch(\URLRouter\Router::BEFORE_CALL_ACTION, $event);
+				}
 			}
 			
 			$ret = call_user_func($toCall, $router, $this);

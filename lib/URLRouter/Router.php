@@ -50,6 +50,7 @@ class Router{
 	public $event_dispatcher		= false;
 	
 	const RESOLVE_CONTROLLER		= 'URLRouter.ResolveController';
+	const BEFORE_CALL_ACTION		= 'URLRoute.BeforeCallAction';
 	
 	/**
 	* Adds the passed map of routes into the router
