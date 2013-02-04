@@ -12,7 +12,7 @@ class BeforeActionControllerEvent extends Event{
 	}
 	
 	public function setAction($action){
-		return $this->action;
+		$this->action = $action;
 	}
 
 }
