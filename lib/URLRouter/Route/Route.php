@@ -211,6 +211,26 @@ class Route{
 		return $toCall;
 	}
 	
+	function beforeActionControllerEvent($toCall){
+		if(is_array($toCall)){
+			list($class, $actionName) = $toCall;
+
+			if(!method_exists($class, "__call") && !method_exists($class, $actionName)){
+				throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class " . get_class($class));
+			}
+
+			// Dispatch a before call action event
+			if($class instanceof \Symfony\Component\EventDispatcher\EventDispatcher){
+				$event = new \URLRouter\Event\BeforeActionControllerEvent();
+				$event->setAction($actionName);
+				$class->dispatch(\URLRouter\Router::BEFORE_CALL_ACTION, $event);
+				$toCall[1] = $event->getAction();
+			}
+		}
+		
+		return $toCall;
+	}
+	
 	/**
 	 * Creates an Instance of the controller
 	 * @throws FileDoesntExistException, UnknownClassException
@@ -249,21 +269,7 @@ class Route{
 		}
 		
 		try{
-			if(is_array($toCall)){
-				list($class, $actionName) = $toCall;
-				
-				if(!method_exists($class, "__call") && !method_exists($class, $actionName)){
-					throw new NoRouteException("Method $actionName or __call or NoRouteAction doesn't exist in class " . get_class($class));
-				}
-				
-				// Dispatch a before call action event
-				if($class instanceof \Symfony\Component\EventDispatcher\EventDispatcher){
-					$event = new \URLRouter\Event\BeforeActionControllerEvent();
-					$event->setAction($actionName);
-					$class->dispatch(\URLRouter\Router::BEFORE_CALL_ACTION, $event);
-					$actionName = $event->getAction();
-				}
-			}
+			$toCall = $this->beforeActionControllerEvent($toCall);
 			
 			$ret = call_user_func($toCall, $router, $this);
 			
